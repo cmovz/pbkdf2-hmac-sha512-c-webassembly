@@ -7,7 +7,7 @@ bash build.sh
 ```
 This command will generate a file called `pbkdf2.wasm`. You can upload it to your server and use it on the browser with code as follows:
 ```js
-computeKey(email, password) {
+function computeKey(email, password) {
   const t0 = performance.now();
   return new Promise(resolve => {
     setTimeout(() => {
@@ -244,7 +244,7 @@ function base64Decode(str) {
   return bin.subarray(0, bin.length - trimN);
 }
 
-computeKey(email, password) {
+function computeKey(email, password) {
   const t0 = performance.now();
   return new Promise(resolve => {
     setTimeout(() => {
