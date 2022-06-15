@@ -11,27 +11,32 @@ function computeKey(email, password) {
   const t0 = performance.now();
   return new Promise(resolve => {
     setTimeout(() => {
-      let encodedPassword = new TextEncoder().encode(password);
-      HEAPU8.set(encodedPassword, basePtr);
-      let salt = new TextEncoder().encode(email + '|your-domain-here.com');
-      HEAPU8.set(salt, basePtr + encodedPassword.length);
+      let encoder = new TextEncoder();
+      let encodedPassword = encoder.encode(password);
+      let salt = encoder.encode(email + '|your-domain-here.com');
+
+      let passwordPtr = basePtr;
+      let saltPtr = passwordPtr + encodedPassword.length;
+      // +4 to account for the pbkdf2 counter appended to the end of the salt
+      let outputPtr = saltPtr + salt.length + 4;
+
+      HEAPU8.set(encodedPassword, passwordPtr);
+      HEAPU8.set(salt, saltPtr);
 
       pbkdf2(
-        basePtr,
-        encodedPassword.length,
-        basePtr + encodedPassword.length,
-        salt.length,
-        100000,
-        basePtr + encodedPassword.length
+        passwordPtr,            // *password
+        encodedPassword.length, // password_len
+        saltPtr,                // *salt + 4 empty bytes at the end
+        salt.length,            // salt_len
+        100000,                 // c
+        outputPtr               // *output
       );
 
-      const dk = HEAPU8.subarray(
-        basePtr + encodedPassword.length,
-        basePtr + encodedPassword.length + 64
-      );
+      // copy the data from the memory since it will be cleaned up next
+      const dk = new Uint8Array(HEAPU8.subarray(outputPtr, outputPtr + 64));
 
       // clean up memory
-      for (let i = 0; i < encodedPassword.length + 64; ++i) {
+      for (let i = passwordPtr; i < outputPtr + 64; ++i) {
         HEAPU8[basePtr + i] = 0x00;
       }
       pbkdf2(basePtr, 0, 1, basePtr);
@@ -248,27 +253,32 @@ function computeKey(email, password) {
   const t0 = performance.now();
   return new Promise(resolve => {
     setTimeout(() => {
-      let encodedPassword = new TextEncoder().encode(password);
-      HEAPU8.set(encodedPassword, basePtr);
-      let salt = new TextEncoder().encode(email + '|your-domain-here.com');
-      HEAPU8.set(salt, basePtr + encodedPassword.length);
+      let encoder = new TextEncoder();
+      let encodedPassword = encoder.encode(password);
+      let salt = encoder.encode(email + '|your-domain-here.com');
+
+      let passwordPtr = basePtr;
+      let saltPtr = passwordPtr + encodedPassword.length;
+      // +4 to account for the pbkdf2 counter appended to the end of the salt
+      let outputPtr = saltPtr + salt.length + 4;
+
+      HEAPU8.set(encodedPassword, passwordPtr);
+      HEAPU8.set(salt, saltPtr);
 
       pbkdf2(
-        basePtr,
-        encodedPassword.length,
-        basePtr + encodedPassword.length,
-        salt.length,
-        100000,
-        basePtr + encodedPassword.length
+        passwordPtr,            // *password
+        encodedPassword.length, // password_len
+        saltPtr,                // *salt + 4 empty bytes at the end
+        salt.length,            // salt_len
+        100000,                 // c
+        outputPtr               // *output
       );
 
-      const dk = HEAPU8.subarray(
-        basePtr + encodedPassword.length,
-        basePtr + encodedPassword.length + 64
-      );
+      // copy the data from the memory since it will be cleaned up next
+      const dk = new Uint8Array(HEAPU8.subarray(outputPtr, outputPtr + 64));
 
       // clean up memory
-      for (let i = 0; i < encodedPassword.length + 64; ++i) {
+      for (let i = passwordPtr; i < outputPtr + 64; ++i) {
         HEAPU8[basePtr + i] = 0x00;
       }
       pbkdf2(basePtr, 0, 1, basePtr);
