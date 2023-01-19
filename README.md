@@ -297,3 +297,5 @@ WebAssembly.instantiate(base64Decode(b64Wasm)).then(obj => {
   window.HEAPU8 = new Uint8Array(exports.memory.buffer);
 });
 ```
+
+You can learn more about WebAssembly with [my video course](https://cmovz.io/learn-webassembly).
